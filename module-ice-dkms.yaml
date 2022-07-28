@@ -1,0 +1,52 @@
+apiVersion: ooto.sigs.k8s.io/v1alpha1
+kind: Module
+metadata:
+  name: kmmo-dkms-ice 
+spec:
+  driverContainer:
+    name: overwritten-anyway
+    command: [sleep, infinity]
+    lifecycle:
+      postStart:
+        exec:
+          command: [modprobe, -vd, /opt, ice]
+      preStop:
+        exec:
+          command: [modprobe, -rvd, /opt, ice]
+    securityContext:
+      capabilities:
+        add: [SYS_MODULE] # this is enough in most cases
+  kernelMappings:
+    - literal: 5.4.196-108.356.amzn2.x86_64 
+      build:
+        pull:
+          insecure: false 
+          #insecureSkipTLSVerify: true 
+        push:
+          insecure: false
+          #insecureSkipTLSVerify: true
+        dockerfile: |
+          ARG KERNEL_VERSION=''
+          FROM amazonlinux
+          RUN amazon-linux-extras install kernel-5.4 -y
+          RUN yum -y install dkms python3 git make gcc bison flex elfutils-libelf-devel openssl-devel xz yum-utils bc && yum clean all
+          WORKDIR /usr/src
+          RUN curl -L https://sourceforge.net/projects/e1000/files/ice%20stable/1.8.9/ice-1.8.9.tar.gz/download > ice-1.8.9.tar.gz
+          RUN tar xfvz ice-1.8.9.tar.gz
+          RUN cp -r ice-1.8.9/src/* .
+          RUN git clone git@github.com:enriquebelarte/dkms-ooto.git
+          RUN cp dkms-ooto/dkms-ice.conf ice-1.8.9/dkms.conf
+          RUN dkms add -m ice -v 1.8.9 && dkms build -m ice -v 1.8.9 dkms install -m ice -v 1.8.9
+
+          FROM amazonlinux 
+          RUN yum -y install kmod && yum clean all
+          RUN amazon-linux-extras install kernel-5.4 -y
+          ARG KERNEL_VERSION
+          RUN mkdir -p /opt/lib/modules/${KERNEL_VERSION}
+          COPY --from=builder /build/ice-1.8.9/src/ice.ko /opt/lib/modules/${KERNEL_VERSION}/
+          RUN depmod -b /opt
+      containerImage: 804517629211.dkr.ecr.eu-west-3.amazonaws.com/ice-kmod:1.101
+  selector:  
+    kubernetes.io/hostname: ip-192-168-13-20.eu-west-3.compute.internal
+  imagePullSecret:
+    name: aws-ecr
