@@ -36,7 +36,7 @@ spec:
           RUN cp -r ice-1.8.9/src/* .
           RUN git clone https://github.com/enriquebelarte/dkms-ooto.git 
           RUN cp dkms-ooto/dkms-ice.conf ice-1.8.9/dkms.conf
-          RUN dkms add -m ice -v 1.8.9 && dkms build -m ice -v 1.8.9 dkms install -m ice -v 1.8.9
+          RUN dkms add -m ice -v 1.8.9 && dkms build -m ice -v 1.8.9 && dkms install -m ice -v 1.8.9
 
           FROM amazonlinux 
           RUN yum -y install kmod && yum clean all
