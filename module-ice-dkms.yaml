@@ -27,7 +27,7 @@ spec:
           #insecureSkipTLSVerify: true
         dockerfile: |
           ARG KERNEL_VERSION=''
-          FROM amazonlinux
+          FROM amazonlinux as builder
           RUN amazon-linux-extras install kernel-5.4 -y
           RUN yum -y install dkms python3 git make gcc bison flex elfutils-libelf-devel openssl-devel xz yum-utils bc && yum clean all
           WORKDIR /usr/src

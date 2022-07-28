@@ -42,9 +42,7 @@ spec:
           RUN mkdir -p /opt/lib/modules/${KERNEL_VERSION}
           COPY --from=builder /build/silly-kmod/silly.ko /opt/lib/modules/${KERNEL_VERSION}/
           RUN depmod -b /opt
-      containerImage: 804517629211.dkr.ecr.eu-west-3.amazonaws.com/silly-kmod:0.2
-
-
+      containerImage: 804517629211.dkr.ecr.eu-west-3.amazonaws.com/silly-kmod:1.1
   selector:  
     kubernetes.io/hostname: ip-192-168-13-20.eu-west-3.compute.internal
   imagePullSecret:
